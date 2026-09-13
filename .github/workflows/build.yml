@@ -1,15 +1,15 @@
-name: Build Fabric Mod (26.1.2) — Release manual
+name: Build Fabric Mod (26.1.2) - Release manual
 
-on:
+"on":
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Etiqueta de la release (no debe existir aún), p. ej. v1.0.0'
+        description: "Etiqueta de la release (no debe existir aun), p. ej. v1.0.0"
         required: true
         type: string
-        default: 'v1.0.0'
+        default: "v1.0.0"
       prerelease:
-        description: 'Marcar la release como prerelease'
+        description: "Marcar la release como prerelease"
         required: false
         type: boolean
         default: false
@@ -34,7 +34,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '25'
+          java-version: "25"
           cache: gradle
 
       - name: Validar wrapper de Gradle
@@ -43,13 +43,13 @@ jobs:
       - name: Compilar el mod para Fabric 26.1.2 (loom remapJar)
         run: ./gradlew :client-mod:remapJar --no-daemon --stacktrace
 
-      - name: Localizar el jar y preparar name
+      - name: Localizar el jar
         id: locate
         shell: bash
         run: |
           FILE="$(find client-mod/build/libs -name 'remote-offload-*.jar' ! -name '*sources*' ! -name '*-dev*' ! -name '*-slim*' | sort | tail -n 1)"
           if [ -z "$FILE" ]; then
-            echo "::error::No se encontró el jar en client-mod/build/libs"
+            echo "::error::No se encontro el jar en client-mod/build/libs"
             exit 1
           fi
           echo "jar=$FILE" >> "$GITHUB_ENV"
@@ -64,8 +64,4 @@ jobs:
           [ "${{ inputs.prerelease }}" = "true" ] && FLAGS="--prerelease"
           gh release create "${{ inputs.tag }}" "$jar" $FLAGS \
             --title "Remote Offload ${{ inputs.tag }}" \
-            --notes "Build de Fabric para Minecraft **26.1.2** — Fabric Loader 0.18.4, Fabric API 0.152.1+26.1.2.
-
-Jar: \`$jar\`.
-
-Disparad manualmente desde Actions > Build Fabric Mod (26.1.2) — Release manual > Run workflow."
+            --notes "Build manual de Fabric para Minecraft 26.1.2 (Fabric Loader 0.18.4, Fabric API 0.152.1+26.1.2). Jar: $(basename "$jar")"
