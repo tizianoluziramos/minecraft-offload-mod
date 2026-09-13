@@ -40,8 +40,8 @@ jobs:
       - name: Validar wrapper de Gradle
         run: chmod +x gradlew && ./gradlew --version
 
-      - name: Compilar el mod para Fabric 26.1.2 (loom remapJar)
-        run: ./gradlew :client-mod:remapJar --no-daemon --stacktrace
+      - name: Compilar el mod para Fabric 26.1.2 (loom jar)
+        run: ./gradlew :client-mod:jar --no-daemon --stacktrace
 
       - name: Localizar el jar
         id: locate
