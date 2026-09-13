@@ -1,7 +1,8 @@
 @echo off
 setlocal
 set "SCRIPT_DIR=%~dp0"
-set "JAVA=java"
+for /f "delims=" %%d in ('dir /b /ad "%SCRIPT_DIR%.gradle-dist\jdk-25*" 2^>nul') do set "JAVA_HOME=%SCRIPT_DIR%.gradle-dist\%%d"
+if defined JAVA_HOME ( set "JAVA=%JAVA_HOME%\bin\java.exe" ) else ( set "JAVA=java" )
 set "SERVER_JAR=%SCRIPT_DIR%remote-server\build\libs\remote-server-%APP_VERSION%-fat.jar"
 set "CLIENT_BUILD=%SCRIPT_DIR%client-mod\build\libs\client-mod-%APP_VERSION%.jar"
 set "MC_MODS=%USERPROFILE%\.minecraft\mods"
@@ -10,10 +11,10 @@ echo ============================================
 echo Remote Offload - Build Script
 echo ============================================
 
-if not exist "%SCRIPT_DIR%.gradle-dist\gradle-9.4.0\bin\gradle.bat" call "%SCRIPT_DIR%setup.bat"
+if not exist "%SCRIPT_DIR%.gradle-dist\gradle-9.5.0\bin\gradle.bat" call "%SCRIPT_DIR%setup.bat"
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
-set "GRADLE=%SCRIPT_DIR%.gradle-dist\gradle-9.4.0\bin\gradle.bat"
+set "GRADLE=%SCRIPT_DIR%.gradle-dist\gradle-9.5.0\bin\gradle.bat"
 
 echo.
 echo [1/3] Building common...

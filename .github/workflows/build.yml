@@ -40,10 +40,10 @@ jobs:
       - name: Validar wrapper de Gradle
         run: chmod +x gradlew && ./gradlew --version
 
-      - name: Compilar el mod para Fabric 26.1.2 (loom jar)
-        run: ./gradlew :client-mod:jar --no-daemon --stacktrace
+      - name: Compilar el mod y el servidor (Fabric 26.1.2 + fat-jar)
+        run: ./gradlew :client-mod:jar :remote-server:fatJar --no-daemon --stacktrace
 
-      - name: Localizar el jar
+      - name: Localizar el jar del mod
         id: locate
         shell: bash
         run: |
@@ -55,6 +55,18 @@ jobs:
           echo "jar=$FILE" >> "$GITHUB_ENV"
           echo "File: $FILE"
 
+      - name: Localizar el fat-jar del servidor
+        id: locate-server
+        shell: bash
+        run: |
+          SERVER="$(find remote-server/build/libs -name 'remote-server-*-fat.jar' | sort | tail -n 1)"
+          if [ -z "$SERVER" ]; then
+            echo "::error::No se encontro el fat-jar en remote-server/build/libs"
+            exit 1
+          fi
+          echo "server=$SERVER" >> "$GITHUB_ENV"
+          echo "Server: $SERVER"
+
       - name: Subir a la release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -62,6 +74,6 @@ jobs:
         run: |
           FLAGS=""
           [ "${{ inputs.prerelease }}" = "true" ] && FLAGS="--prerelease"
-          gh release create "${{ inputs.tag }}" "$jar" $FLAGS \
+          gh release create "${{ inputs.tag }}" "$jar" "$server" $FLAGS \
             --title "Remote Offload ${{ inputs.tag }}" \
-            --notes "Build manual de Fabric para Minecraft 26.1.2 (Fabric Loader 0.18.4, Fabric API 0.152.1+26.1.2). Jar: $(basename "$jar")"
+            --notes "Build manual de Fabric para Minecraft 26.1.2 (Fabric Loader 0.18.4, Fabric API 0.152.1+26.1.2). Jars: $(basename "$jar"), $(basename "$server")"
