@@ -1,0 +1,71 @@
+name: Build Fabric Mod (26.1.2) — Release manual
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Etiqueta de la release (no debe existir aún), p. ej. v1.0.0'
+        required: true
+        type: string
+        default: 'v1.0.0'
+      prerelease:
+        description: 'Marcar la release como prerelease'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-fabric-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-fabric-release:
+    name: Compilar remapJar y crear GitHub Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25 (loom y el mod targetean Java 25)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Validar wrapper de Gradle
+        run: chmod +x gradlew && ./gradlew --version
+
+      - name: Compilar el mod para Fabric 26.1.2 (loom remapJar)
+        run: ./gradlew :client-mod:remapJar --no-daemon --stacktrace
+
+      - name: Localizar el jar y preparar name
+        id: locate
+        shell: bash
+        run: |
+          FILE="$(find client-mod/build/libs -name 'remote-offload-*.jar' ! -name '*sources*' ! -name '*-dev*' ! -name '*-slim*' | sort | tail -n 1)"
+          if [ -z "$FILE" ]; then
+            echo "::error::No se encontró el jar en client-mod/build/libs"
+            exit 1
+          fi
+          echo "jar=$FILE" >> "$GITHUB_ENV"
+          echo "File: $FILE"
+
+      - name: Subir a la release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          FLAGS=""
+          [ "${{ inputs.prerelease }}" = "true" ] && FLAGS="--prerelease"
+          gh release create "${{ inputs.tag }}" "$jar" $FLAGS \
+            --title "Remote Offload ${{ inputs.tag }}" \
+            --notes "Build de Fabric para Minecraft **26.1.2** — Fabric Loader 0.18.4, Fabric API 0.152.1+26.1.2.
+
+Jar: \`$jar\`.
+
+Disparad manualmente desde Actions > Build Fabric Mod (26.1.2) — Release manual > Run workflow."
