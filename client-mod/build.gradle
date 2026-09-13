@@ -16,25 +16,11 @@ base {
 }
 
 // Fuentes separadas: lib de "mundo puro"/red en src/main, código que toca
-// Minecraft (client) en src/client.
-sourceSets {
-    main {
-        java {
-            srcDir 'src/main/java'
-        }
-    }
-    client {
-        java { srcDir 'src/client/java' }
-    }
-}
-
+// Minecraft (client) en src/client. Loom crea y cablea el sourceSet 'client'
+// con splitEnvironmentSourceSets() (src/client/java por defecto y classpath
+// extendido desde 'main').
 loom {
     splitEnvironmentSourceSets()
-}
-
-configurations {
-    clientImplementation.extendsFrom implementation
-    clientCompileOnly.extendsFrom compileOnly
 }
 
 dependencies {
@@ -42,9 +28,6 @@ dependencies {
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
-
-    // el entrypoint de cliente necesita la lib common:
-    clientImplementation project(':common')
 }
 
 processResources {
