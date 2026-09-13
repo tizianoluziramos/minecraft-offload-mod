@@ -120,7 +120,6 @@ public final class RemoteProcessingEngine {
         config.timeoutMs = target.timeoutMs;
         config.maxConcurrentTasks = target.maxConcurrentTasks;
         config.compression = target.compression;
-        config.mode = target.mode;
         config.showLatency = target.showLatency;
         config.showStatus = target.showStatus;
         config.autoReconnect = target.autoReconnect;

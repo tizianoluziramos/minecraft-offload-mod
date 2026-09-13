@@ -27,9 +27,6 @@ public final class RemoteProcessingConfig {
     public int maxConcurrentTasks = 4;
     public boolean compression = true;
 
-    /** "LAN" o "INTERNET" (intervalos de heartbeat distintos). */
-    public String mode = "LAN";
-
     public boolean showLatency;
     public boolean showStatus;
     public boolean autoReconnect = true;
@@ -71,8 +68,39 @@ public final class RemoteProcessingConfig {
         return null;
     }
 
+    /** Intervalo de heartbeat: auto-derivado del host (LAN=5s, internet=15s). */
     public long pingIntervalMs() {
-        return "INTERNET".equalsIgnoreCase(mode) ? 15_000 : 5_000;
+        return isLanAddress(host) ? 5_000 : 15_000;
+    }
+
+    private static boolean isLanAddress(String host) {
+        if (host == null) {
+            return false;
+        }
+        String h = host.trim().toLowerCase();
+        if (h.isEmpty() || h.equals("localhost") || h.endsWith(".local")) {
+            return true;
+        }
+        String[] parts = h.split("\\.");
+        if (parts.length != 4) {
+            return false;
+        }
+        try {
+            int a = Integer.parseInt(parts[0]);
+            int b = Integer.parseInt(parts[1]);
+            if (a == 127 || a == 10) {
+                return true;
+            }
+            if (a == 172 && b >= 16 && b <= 31) {
+                return true;
+            }
+            if (a == 192 && b == 168) {
+                return true;
+            }
+            return a == 169 && b == 254;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     // ---------------------------------------------------------------- I/O
@@ -114,7 +142,6 @@ public final class RemoteProcessingConfig {
         m.put("timeoutMs", String.valueOf(c.timeoutMs));
         m.put("maxConcurrentTasks", String.valueOf(c.maxConcurrentTasks));
         m.put("compression", String.valueOf(c.compression));
-        m.put("mode", c.mode);
         m.put("showLatency", String.valueOf(c.showLatency));
         m.put("showStatus", String.valueOf(c.showStatus));
         m.put("autoReconnect", String.valueOf(c.autoReconnect));
@@ -263,7 +290,6 @@ public final class RemoteProcessingConfig {
                     case "timeoutms" -> c.timeoutMs = Integer.parseInt(v);
                     case "maxconcurrenttasks" -> c.maxConcurrentTasks = Integer.parseInt(v);
                     case "compression" -> c.compression = Boolean.parseBoolean(v);
-                    case "mode" -> c.mode = v;
                     case "showlatency" -> c.showLatency = Boolean.parseBoolean(v);
                     case "showstatus" -> c.showStatus = Boolean.parseBoolean(v);
                     case "autoreconnect" -> c.autoReconnect = Boolean.parseBoolean(v);
@@ -289,7 +315,6 @@ public final class RemoteProcessingConfig {
         c.timeoutMs = timeoutMs;
         c.maxConcurrentTasks = maxConcurrentTasks;
         c.compression = compression;
-        c.mode = mode;
         c.showLatency = showLatency;
         c.showStatus = showStatus;
         c.autoReconnect = autoReconnect;

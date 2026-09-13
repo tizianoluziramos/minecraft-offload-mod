@@ -10,8 +10,6 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-import java.util.function.Consumer;
-
 /**
  * Pantalla "Remote Processing" dentro de Opciones.
  * La prueba de conexión es asíncrona (no bloquea el render/tick).
@@ -27,7 +25,6 @@ public class RemoteProcessingConfigScreen extends Screen {
     private EditBox maxTasksBox;
 
     private Button enabledBtn;
-    private Button modeBtn;
     private Button compressionBtn;
     private Button autoReconnBtn;
     private Button showLatBtn;
@@ -53,29 +50,32 @@ public class RemoteProcessingConfigScreen extends Screen {
         int x = X_WIDGET;
         int y = 28;
         int tw = Math.max(W_WIDGET, width - X_WIDGET - 10);
-        enabledBtn = toggle(x, y, tw, "Enabled", cfg.enabled, v -> {});
-        modeBtn = modeToggle(x, y + 28, tw, cfg.mode);
-        compressionBtn = toggle(x, y + 56, tw, "Compression", cfg.compression, v -> {});
-        autoReconnBtn = toggle(x, y + 84, tw, "AutoReconnect", cfg.autoReconnect, v -> {});
+        int bx = X_LABEL + 4;
+        int fieldW = width - 20;
+        int fieldStep = 36;
+        int fieldY = y + 140;
 
-        hostBox = box(X_LABEL + 4, y + 28 * 4, width - 20, String.valueOf(cfg.host), false);
-        portBox = box(X_LABEL + 4, y + 28 * 5, width - 20, String.valueOf(cfg.port), true);
-        tokenBox = box(X_LABEL + 4, y + 28 * 6, width - 20, cfg.token, false);
-        timeoutBox = box(X_LABEL + 4, y + 28 * 7, width - 20, String.valueOf(cfg.timeoutMs), true);
-        maxTasksBox = box(X_LABEL + 4, y + 28 * 8, width - 20, String.valueOf(cfg.maxConcurrentTasks), true);
+        enabledBtn = toggle(x, y, tw, cfg.enabled);
+        compressionBtn = toggle(x, y + 28, tw, cfg.compression);
+        autoReconnBtn = toggle(x, y + 56, tw, cfg.autoReconnect);
+        showLatBtn = toggle(x, y + 84, tw, cfg.showLatency);
+        showStatusBtn = toggle(x, y + 112, tw, cfg.showStatus);
 
-        showLatBtn = toggle(x, y + 28 * 9, tw, "Show latency on HUD", cfg.showLatency, v -> {});
-        showStatusBtn = toggle(x, y + 28 * 10, tw, "Show status on HUD", cfg.showStatus, v -> {});
+        hostBox = box(bx, fieldY, fieldW, String.valueOf(cfg.host), false);
+        portBox = box(bx, fieldY + fieldStep, fieldW, String.valueOf(cfg.port), true);
+        tokenBox = box(bx, fieldY + fieldStep * 2, fieldW, cfg.token, false);
+        timeoutBox = box(bx, fieldY + fieldStep * 3, fieldW, String.valueOf(cfg.timeoutMs), true);
+        maxTasksBox = box(bx, fieldY + fieldStep * 4, fieldW, String.valueOf(cfg.maxConcurrentTasks), true);
 
+        int buttonsY = fieldY + fieldStep * 5 + 6;
         testBtn = Button.builder(Component.literal("Test connection"),
                         b -> testConnection())
-                .bounds(width / 2 - 120, y + 28 * 11, 118, 20).build();
+                .bounds(width / 2 - 120, buttonsY, 118, 20).build();
         saveBtn = Button.builder(Component.literal("Save & Close"),
                         b -> save())
-                .bounds(width / 2 + 2, y + 28 * 11, 118, 20).build();
+                .bounds(width / 2 + 2, buttonsY, 118, 20).build();
 
         addRenderableWidget(enabledBtn);
-        addRenderableWidget(modeBtn);
         addRenderableWidget(compressionBtn);
         addRenderableWidget(autoReconnBtn);
         addRenderableWidget(hostBox);
@@ -99,9 +99,8 @@ public class RemoteProcessingConfigScreen extends Screen {
         }
         int y = 28;
         label(g, "Enabled", enabledBtn.getY());
-        label(g, "Mode", modeBtn.getY());
         label(g, "Compression", compressionBtn.getY());
-        label(g, "AutoReconnect", autoReconnBtn.getY());
+        label(g, "Auto Reconnect", autoReconnBtn.getY());
         label(g, "Host", hostBox.getY() - 14);
         label(g, "Port", portBox.getY() - 14);
         label(g, "Token", tokenBox.getY() - 14);
@@ -111,7 +110,8 @@ public class RemoteProcessingConfigScreen extends Screen {
         label(g, "Show status", showStatusBtn.getY());
 
         if (!status.isEmpty()) {
-            g.text(this.font, status, width / 2 - font.width(status) / 2, y + 28 * 11 + 26,
+            int buttonsY = hostBox.getY() + 36 * 5 + 6;
+            g.text(this.font, status, width / 2 - font.width(status) / 2, buttonsY + 26,
                     0xFF55FF55, false);
         }
     }
@@ -178,7 +178,6 @@ public class RemoteProcessingConfigScreen extends Screen {
         RemoteProcessingEngine e = RemoteProcessingEngine.instance();
         RemoteProcessingConfig c = e != null ? e.config().copy() : new RemoteProcessingConfig();
         c.enabled = value(enabledBtn, false);
-        c.mode = modeFromBtn();
         c.host = hostBox.getValue();
         c.port = intOf(portBox.getValue(), c.port);
         c.token = tokenBox.getValue();
@@ -193,11 +192,6 @@ public class RemoteProcessingConfigScreen extends Screen {
 
     private boolean value(Button b, boolean def) {
         return b != null ? b.getMessage().getString().toLowerCase().contains("on") : def;
-    }
-
-    private String modeFromBtn() {
-        String s = modeBtn.getMessage().getString();
-        return s.toUpperCase().contains("INTERNET") ? "INTERNET" : "LAN";
     }
 
     private static int intOf(String s, int def) {
@@ -223,21 +217,12 @@ public class RemoteProcessingConfigScreen extends Screen {
         return b;
     }
 
-    private Button toggle(int x, int y, int w, String name, boolean initial, Consumer<Boolean> on) {
-        Button b = Button.builder(Component.literal(name + ": " + (initial ? "ON" : "OFF")),
+    private Button toggle(int x, int y, int w, boolean initial) {
+        Button b = Button.builder(Component.literal(initial ? "ON" : "OFF"),
                         btn -> {
                             boolean next = btn.getMessage().getString().endsWith("ON");
-                            btn.setMessage(Component.literal(name + ": " + (next ? "OFF" : "ON")));
-                            on.accept(!next);
+                            btn.setMessage(Component.literal(next ? "OFF" : "ON"));
                         })
-                .bounds(x, y, w, 20).build();
-        return b;
-    }
-
-    private Button modeToggle(int x, int y, int w, String mode) {
-        Button b = Button.builder(Component.literal("Mode:" + mode.toUpperCase()),
-                        btn -> btn.setMessage(Component.literal(
-                                "Mode:" + (btn.getMessage().getString().contains("LAN") ? "INTERNET" : "LAN"))))
                 .bounds(x, y, w, 20).build();
         return b;
     }
