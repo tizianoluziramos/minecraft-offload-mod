@@ -9,6 +9,7 @@ group = rootProject.group
 // --- vínculos con la librería compartida (dev.remoteoffload.common) ---------
 dependencies {
     implementation project(':common')
+    include project(':common')   // jar-in-jar dentro del mod
 }
 
 base {
@@ -41,11 +42,6 @@ processResources {
     filesMatching('fabric.mod.json') {
         expand 'version': project.version
     }
-}
-
-jar {
-    from project(':common').sourceSets.main.output
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 java {
