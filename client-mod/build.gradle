@@ -1,0 +1,66 @@
+plugins {
+    id 'java'
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+
+version = rootProject.version
+group = rootProject.group
+
+// --- vínculos con la librería compartida (dev.remoteoffload.common) ---------
+dependencies {
+    implementation project(':common')
+}
+
+base {
+    archivesName = 'remote-offload'
+}
+
+// Fuentes separadas: lib de "mundo puro"/red en src/main, código que toca
+// Minecraft (client) en src/client.
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+        }
+    }
+    client {
+        java { srcDir 'src/client/java' }
+    }
+}
+
+loom {
+    splitEnvironmentSourceSets()
+}
+
+configurations {
+    clientImplementation.extendsFrom implementation
+    clientCompileOnly.extendsFrom compileOnly
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+
+    // el entrypoint de cliente necesita la lib common:
+    clientImplementation project(':common')
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('fabric.mod.json') {
+        expand 'version': project.version
+    }
+}
+
+jar {
+    from project(':common').sourceSets.main.output
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}

@@ -1,0 +1,54 @@
+plugins {
+    id 'application'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':common')
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+application {
+    mainClass = 'dev.remoteoffload.server.RemoteServerApp'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 25
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes('Main-Class': 'dev.remoteoffload.server.RemoteServerApp')
+    }
+    archiveBaseName = 'remote-server'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.register('fatJar', Jar) {
+    archiveBaseName = 'remote-server'
+    archiveClassifier = 'fat'
+    dependsOn tasks.named('jar')
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from sourceSets.main.output
+    from project(':common').sourceSets.main.output
+    manifest {
+        attributes('Main-Class': 'dev.remoteoffload.server.RemoteServerApp')
+    }
+}
+
+tasks.named('build') {
+    dependsOn tasks.named('fatJar')
+}

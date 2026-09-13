@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "remote-offload",
+  "version": "1.0.0-SNAPSHOT",
+  "name": "Remote Offload",
+  "description": "Offload de cómputos (compresión, pathfinding, world queries, benchmark) a un servidor externo Java, con fallback local automático.",
+  "authors": [],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "main": [
+      "dev.remoteoffload.RemoteProcessingMod"
+    ],
+    "client": [
+      "dev.remoteoffload.client.RemoteProcessingClient"
+    ]
+  },
+  "mixins": [
+    "remote-offload.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.4",
+    "minecraft": "~26.1.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}

@@ -1,0 +1,8 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven { url = 'https://maven.fabricmc.net/' }
+    }
+}
+rootProject.name = 'remote-offload'
+include ':common', ':client-mod', ':remote-server'
