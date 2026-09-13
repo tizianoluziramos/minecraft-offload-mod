@@ -33,8 +33,8 @@ public final class WorldSnapshotter {
 
         int[] cells = new int[w * h];
         int[] topY = new int[w * h];
-        int maxY = level.getMaxBuildHeight() - 1;
-        int minY = level.getMinBuildHeight();
+        int maxY = level.getMaxY() - 1;
+        int minY = level.getMinY();
 
         for (int dz = 0; dz < h; dz++) {
             for (int dx = 0; dx < w; dx++) {

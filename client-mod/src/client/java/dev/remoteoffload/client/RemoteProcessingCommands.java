@@ -10,13 +10,13 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec3;
 
-import static net.minecraft.commands.Commands.argument;
-import static net.minecraft.commands.Commands.literal;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.argument;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal;
 
 /** Comandos /remote (estado, benchmark, pathfind, slime chunks, config). */
 public final class RemoteProcessingCommands {
@@ -141,8 +141,9 @@ public final class RemoteProcessingCommands {
 
     private static int slime(CommandContext<FabricClientCommandSource> c, int cx, int cz) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.level == null) {
-            chat("Debes estar en un mundo");
+        IntegratedServer server = mc.getSingleplayerServer();
+        if (mc.level == null || server == null) {
+            chat("Debes estar en un mundo singleplayer");
             return 1;
         }
         RemoteProcessingEngine e = RemoteProcessingEngine.instance();
@@ -150,7 +151,7 @@ public final class RemoteProcessingCommands {
             chat("Motor no inicializado");
             return 1;
         }
-        long seed = mc.level.getSeed();
+        long seed = server.overworld().getSeed();
         RemoteTasks.slimeChunk(e, seed, cx, cz).whenComplete((r, ex) -> Minecraft.getInstance().execute(() -> {
             if (ex != null) {
                 chat("slime error: " + ex.getMessage());

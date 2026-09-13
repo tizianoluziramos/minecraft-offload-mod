@@ -10,6 +10,8 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
+import java.util.function.Consumer;
+
 /**
  * Pantalla "Remote Processing" dentro de Opciones.
  * La prueba de conexión es asíncrona (no bloquea el render/tick).
@@ -55,11 +57,11 @@ public class RemoteProcessingConfigScreen extends Screen {
         compressionBtn = toggle(x, y + 28, "Compression", cfg.compression, v -> {});
         autoReconnBtn = toggle(x + 66, y + 28, "AutoReconnect", cfg.autoReconnect, v -> {});
 
-        hostBox = box(X_LABEL + 4, y + 28 * 2, width - 20, String.valueOf(cfg.host), null);
-        portBox = box(X_LABEL + 4, y + 28 * 3, width - 20, String.valueOf(cfg.port), "\\d+");
-        tokenBox = box(X_LABEL + 4, y + 28 * 4, width - 20, cfg.token, null);
-        timeoutBox = box(X_LABEL + 4, y + 28 * 5, width - 20, String.valueOf(cfg.timeoutMs), "\\d+");
-        maxTasksBox = box(X_LABEL + 4, y + 28 * 6, width - 20, String.valueOf(cfg.maxConcurrentTasks), "\\d+");
+        hostBox = box(X_LABEL + 4, y + 28 * 2, width - 20, String.valueOf(cfg.host), false);
+        portBox = box(X_LABEL + 4, y + 28 * 3, width - 20, String.valueOf(cfg.port), true);
+        tokenBox = box(X_LABEL + 4, y + 28 * 4, width - 20, cfg.token, false);
+        timeoutBox = box(X_LABEL + 4, y + 28 * 5, width - 20, String.valueOf(cfg.timeoutMs), true);
+        maxTasksBox = box(X_LABEL + 4, y + 28 * 6, width - 20, String.valueOf(cfg.maxConcurrentTasks), true);
 
         showLatBtn = toggle(x, y + 28 * 7, "Show latency", cfg.showLatency, v -> {});
         showStatusBtn = toggle(x + 66, y + 28 * 7, "Show status", cfg.showStatus, v -> {});
@@ -89,8 +91,8 @@ public class RemoteProcessingConfigScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphicsExtractor g, int mx, int my, float partialTick) {
-        super.render(g, mx, my, partialTick);
+    public void extractRenderState(GuiGraphicsExtractor g, int mx, int my, float partialTick) {
+        super.extractRenderState(g, mx, my, partialTick);
         {
             g.text(this.font, "Remote Processing", width / 2 - font.width("Remote Processing") / 2, 8, 0xFFFFFFFF, false);
         }
@@ -205,21 +207,27 @@ public class RemoteProcessingConfigScreen extends Screen {
         }
     }
 
-    private EditBox box(int x, int y, int w, String v, String filter) {
+    private EditBox box(int x, int y, int w, String v, boolean digitsOnly) {
         EditBox b = new EditBox(this.font, x, y, w, 20, Component.literal(v));
         b.setValue(v);
         b.setMaxLength(256);
-        if (filter != null) {
-            b.setFilter(s -> s.matches(filter));
+        if (digitsOnly) {
+            b.setResponder(s -> {
+                String cleaned = s.replaceAll("[^0-9]", "");
+                if (!s.equals(cleaned)) {
+                    b.setValue(cleaned);
+                }
+            });
         }
         return b;
     }
 
-    private Button toggle(int x, int y, String name, boolean initial, Runnable on) {
+    private Button toggle(int x, int y, String name, boolean initial, Consumer<Boolean> on) {
         Button b = Button.builder(Component.literal(name + ": " + (initial ? "ON" : "OFF")),
                         btn -> {
-                            boolean on2 = btn.getMessage().getString().endsWith("ON");
-                            btn.setMessage(Component.literal(name + ": " + (on2 ? "OFF" : "ON")));
+                            boolean next = btn.getMessage().getString().endsWith("ON");
+                            btn.setMessage(Component.literal(name + ": " + (next ? "OFF" : "ON")));
+                            on.accept(!next);
                         })
                 .bounds(x, y, 62, 20).build();
         return b;

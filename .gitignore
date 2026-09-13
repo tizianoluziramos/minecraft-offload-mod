@@ -1,7 +1,7 @@
 .gradle/
+.gradle-dist/
 build/
 out/
-.gradle/
 
 *.iml
 .idea/

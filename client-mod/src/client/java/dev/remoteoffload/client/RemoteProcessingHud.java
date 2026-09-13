@@ -6,6 +6,7 @@ import dev.remoteoffload.config.RemoteProcessingConfig;
 import dev.remoteoffload.runtime.Diagnostics;
 import dev.remoteoffload.runtime.RemoteProcessingEngine;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -19,13 +20,11 @@ import java.util.List;
 public final class RemoteProcessingHud {
 
     private static final Identifier ID = Identifier.fromNamespaceAndPath("remote-offload", "status");
-    private static final Identifier CHAT_ID = Identifier.fromNamespaceAndPath("minecraft", "chat");
-
     private RemoteProcessingHud() {}
 
     public static void register() {
         HudElementRegistry.attachElementBefore(
-                HudElementRegistry.getElementById(CHAT_ID),
+                VanillaHudElements.CHAT,
                 ID,
                 RemoteProcessingHud::render);
     }

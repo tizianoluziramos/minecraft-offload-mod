@@ -6,7 +6,7 @@ if %ERRORLEVEL% equ 0 (
   echo Using existing Gradle on PATH.
 ) else (
   set "GRADLE_DIR=.gradle-dist"
-  set "GRADLE_VERSION=9.4.0"
+  set "GRADLE_VERSION=9.5.0"
   set "ZIP=%GRADLE_DIR%\gradle-%GRADLE_VERSION%-bin.zip"
   if not exist "%GRADLE_DIR%" mkdir "%GRADLE_DIR%"
   if not exist "%ZIP%" (
@@ -17,5 +17,5 @@ if %ERRORLEVEL% equ 0 (
   tar -xf "%ZIP%" -C "%GRADLE_DIR%"
   set "PATH=%~dp0%GRADLE_DIR%\gradle-%GRADLE_VERSION%\bin;%PATH%"
 )
-gradle wrapper --gradle-version 9.4.0
+gradle wrapper --gradle-version 9.5.0
 echo Wrapper created. You can now use gradlew.bat

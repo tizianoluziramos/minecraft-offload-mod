@@ -2,6 +2,7 @@ package dev.remoteoffload.client;
 
 import dev.remoteoffload.common.serial.Buf;
 import dev.remoteoffload.common.task.TaskType;
+import dev.remoteoffload.common.task.WorldQueryExecutor;
 import dev.remoteoffload.runtime.RemoteProcessingEngine;
 
 import java.util.ArrayList;
